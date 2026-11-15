@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Simulation{% endblock %}
+{% block head %}{% if unfinished %}<meta http-equiv="refresh" content="2">{% endif %}{% endblock %}
+{% block content %}
+<h1>Fight simulation</h1>
+<p class="sub">Every fight replays as its own background task, in parallel.
+  {% if unfinished %}<strong>Running… this page refreshes itself.</strong>{% endif %}</p>
+
+<div class="stats" style="margin-bottom:1rem">
+  <section class="panel stat"><span class="badge">Total</span><dl><dt>Fights</dt><dd>{{ total }}</dd></dl></section>
+  <section class="panel stat"><span class="badge pending">Pending</span><dl><dt>Fights</dt><dd>{{ counts.pending|default:0 }}</dd></dl></section>
+  <section class="panel stat"><span class="badge running">Running</span><dl><dt>Fights</dt><dd>{{ counts.running|default:0 }}</dd></dl></section>
+  <section class="panel stat"><span class="badge done">Done</span><dl><dt>Fights</dt><dd>{{ counts.done|default:0 }}</dd></dl></section>
+  <section class="panel stat"><span class="badge failed">Failed</span><dl><dt>Fights</dt><dd>{{ counts.failed|default:0 }}</dd></dl></section>
+</div>
+
+<div class="panel" style="margin-bottom:1.5rem">
+  <form method="post" action="{% url 'simulate' %}">{% csrf_token %}
+    <div style="display:flex;gap:.7rem;align-items:flex-end;flex-wrap:wrap">
+      <button class="btn ghost" name="action" value="reset">Reset health &amp; replay all fights</button>
+    </div>
+  </form>
+  <hr style="margin:1rem 0;border:none;border-top:1px solid var(--line)">
+  <form method="post" action="{% url 'simulate' %}">{% csrf_token %}
+    <div style="display:flex;gap:.7rem;align-items:flex-end;flex-wrap:wrap">
+      <div class="field" style="margin:0;flex:1;min-width:200px">
+        <label>Fight host URL</label>
+        <input type="url" name="host" placeholder="https://…" style="width:100%">
+      </div>
+      <button class="btn" name="action" value="load_fights">Load &amp; simulate fights</button>
+    </div>
+    <p class="sub" style="margin:.4rem 0 0;font-size:.82rem">
+      Downloads <code>/fight/0</code> (and follows <code>next_batch</code>) as background tasks, then simulates each fight in parallel.
+    </p>
+  </form>
+</div>
+
+<h2>Fights</h2>
+{% for f in fights %}
+<details class="panel fight" {% if forloop.counter <= 3 %}open{% endif %} style="margin-bottom:.7rem">
+  <summary>
+    <span>Fight #{{ f.id }}</span> <span>{{ f.soldier_a.person.name }}</span> <span class="muted">vs</span> <span>{{ f.soldier_b.person.name }}</span>
+    <span class="badge {{ f.status }}" style="margin-left:auto">{{ f.get_status_display }}</span>
+  </summary>
+  {% if f.error %}<pre>{{ f.error }}</pre>{% endif %}
+  <table>
+    <tr><th class="num">#</th><th>Attacker</th><th>Defender</th><th class="num">Damage</th><th class="num">Defender HP after</th></tr>
+    {% for e in f.events.all %}
+    <tr>
+      <td class="num">{{ e.sequence }}</td><td>{{ e.attacker.person.name }}</td><td>{{ e.defender.person.name }}</td>
+      <td class="num">{{ e.damage }}</td>
+      <td class="num {% if e.applied and e.defender_health_after == 0 %}dead{% endif %}">{% if e.applied %}{{ e.defender_health_after }}{% else %}—{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</details>
+{% empty %}
+<div class="panel empty">No fights loaded yet. Use the form above or run <code>python manage.py load_fights --host &lt;url&gt;</code>.</div>
+{% endfor %}
+
+<h2>Soldiers</h2>
+<div class="panel"><table>
+  <tr><th class="num">Id</th><th>Name</th><th>Rank</th><th style="width:30%">Health</th></tr>
+  {% for s in soldiers %}
+  <tr><td class="num">{{ s.person_id }}</td><td class="{% if s.health == 0 %}dead{% endif %}">{{ s.person.name }}</td>
+      <td class="muted">{{ s.person.get_rank_display|default:"—" }}</td>
+      <td><div class="bar"><i class="{% if s.health < 30 %}low{% elif s.health < 60 %}mid{% endif %}" style="width:{{ s.health }}%"></i></div><span class="muted" style="font-size:.8rem">{{ s.health }}</span></td></tr>
+  {% endfor %}
+</table></div>
+{% endblock %}

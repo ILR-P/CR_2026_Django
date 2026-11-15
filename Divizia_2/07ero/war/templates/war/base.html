@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}War Simulator{% endblock %}</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 24px auto; padding: 0 16px; background: #f4f5f7; color: #1d2433; }
+    nav a { margin-right: 14px; font-weight: 600; text-decoration: none; color: #2457c5; }
+    .card { position: relative; display: flex; gap: 12px; align-items: center; background: #fff; border: 1px solid #d9dce3; border-radius: 8px; padding: 10px 12px; margin: 8px 0; }
+    .card:hover { border-color: #2457c5; }
+    .card img.avatar { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; flex: none; }
+    .card .grow { flex: 1; }
+    .card a.stretched::after { content: ""; position: absolute; inset: 0; }
+    .card .above { position: relative; z-index: 2; }
+    .Blue { color: #1f5fd1; } .Red { color: #c62828; }
+    .badge { font-size: .8em; padding: 1px 8px; border-radius: 10px; background: #e8ecf5; }
+    .messages { list-style: none; padding: 0; }
+    .messages li { padding: 8px 12px; border-radius: 6px; margin: 6px 0; }
+    .messages .success { background: #e1f5e4; } .messages .error { background: #fde3e3; }
+    form.stack p { margin: 10px 0; } form.stack label { display: block; font-weight: 600; }
+    form.stack input, form.stack select { padding: 6px; width: 100%; max-width: 360px; box-sizing: border-box; }
+    .errorlist { color: #b00020; list-style: none; padding: 0; margin: 4px 0; }
+    button { padding: 6px 14px; cursor: pointer; }
+    table { border-collapse: collapse; background: #fff; width: 100%; }
+    th, td { border: 1px solid #d9dce3; padding: 6px 10px; text-align: left; }
+    .steps li { margin: 2px 0; }
+  </style>
+</head>
+<body>
+  <nav><a href="{% url 'unit-all' %}">All units</a><a href="{% url 'unit-add' %}">Add unit</a></nav>
+  {% if messages %}<ul class="messages">{% for m in messages %}<li class="{{ m.tags }}">{{ m }}</li>{% endfor %}</ul>{% endif %}
+  {% block content %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,2 @@
+<img class="avatar" width="50" height="50" alt="{{ unit.name }}"
+     src="{% if unit.profile_image_link %}{{ unit.profile_image_link }}{% else %}data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50'%3E%3Crect width='50' height='50' fill='%23c9cfdd'/%3E%3Ctext x='25' y='32' font-size='22' text-anchor='middle' fill='%23576'%3E%3F%3C/text%3E%3C/svg%3E{% endif %}">

@@ -1,0 +1,1 @@
+<div class="bar" role="progressbar" aria-valuenow="{{ unit.health }}" aria-valuemin="0" aria-valuemax="100"><i class="{% if unit.health < 30 %}low{% elif unit.health < 60 %}mid{% endif %}" style="width:{{ unit.health }}%"></i></div>

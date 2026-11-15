@@ -1,0 +1,44 @@
+{% extends 'war/base.html' %}
+
+{% block content %}
+<h2>Simulate</h2>
+<p>
+  <form method="post" action="{% url 'war:simulate_run' %}">{% csrf_token %}
+    <button type="submit">Simulate all fights</button>
+  </form>
+  <form method="post" action="{% url 'war:simulate_reset' %}">{% csrf_token %}
+    <button class="grey" type="submit">Reset (heal everyone)</button>
+  </form>
+  <span class="muted">each fight is replayed by its own parallel task</span>
+</p>
+<p class="stats">
+  {{ n_simulated }}/{{ n_fights }} fights simulated ·
+  {{ damage }} total damage dealt · {{ fallen }} soldiers at 0 HP
+  {% if n_simulated < n_fights %} · <a href="{% url 'war:simulate' %}">refresh</a>{% endif %}
+</p>
+
+<table>
+  <thead>
+    <tr><th class="num">Fight</th><th>Blue</th><th>Red</th>
+        <th class="num">Events</th><th class="num">Damage</th><th>Winner</th></tr>
+  </thead>
+  <tbody>
+    {% for f in fights %}
+    <tr>
+      <td class="num"><a href="{% url 'war:fight_detail' f.external_id %}">#{{ f.external_id }}</a></td>
+      <td class="blue">{{ f.blue.name }} <span class="muted">{{ f.blue.health }}hp</span></td>
+      <td class="red">{{ f.red.name }} <span class="muted">{{ f.red.health }}hp</span></td>
+      <td class="num">{{ f.n_events }}</td>
+      <td class="num">{{ f.damage|default:0 }}</td>
+      <td>
+        {% if f.winner %}<b>{{ f.winner.name }}</b>
+        {% elif f.simulated %}<span class="muted">draw</span>
+        {% else %}<span class="muted">pending</span>{% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6" class="muted">No fights downloaded yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

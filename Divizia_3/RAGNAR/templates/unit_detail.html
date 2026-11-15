@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ unit.name }} - Details</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 0 15px; background: #f8f9fa; }
+        .profile-img { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; margin-bottom: 15px; }
+        .details-box, .fight-card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        ul { list-style: none; padding: 0; margin: 0; }
+        li { padding: 6px 0; border-bottom: 1px solid #eee; }
+        .fight-card h4 { margin: 0 0 8px; color: #333; }
+        .winner-text { color: #28a745; font-weight: bold; }
+        a { display: inline-block; margin-top: 15px; color: #007bff; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="details-box">
+        <img src="{{ unit.profile_image_link }}" alt="{{ unit.name }}" class="profile-img">
+        <h2>{{ unit.name }}</h2>
+        <ul>
+            <li><strong>Team:</strong> {{ unit.team }}</li>
+            <li><strong>Type:</strong> {{ unit.unit_type }}</li>
+            <li><strong>Health:</strong> {{ unit.health }} / 100</li>
+            <li><strong>Attack Points:</strong> {{ unit.attack_points }}</li>
+        </ul>
+    </div>
+
+    <h3>Battle History</h3>
+    {% for fight in fights %}
+        <div class="fight-card">
+            <h4>Fight #{{ fight.id }} vs {% if fight.fighter1 == unit %}{{ fight.fighter2.name }}{% else %}{{ fight.fighter1.name }}{% endif %}</h4>
+            <p><strong>Winner:</strong> <span class="winner-text">{% if fight.winner %}{{ fight.winner.name }}{% else %}Draw{% endif %}</span></p>
+            <a href="/fight/result/{{ fight.id }}" style="margin-top: 5px; font-size: 0.9em;">View Step-by-Step Log &rarr;</a>
+        </div>
+    {% empty %}
+        <p>This unit has not participated in any fights yet.</p>
+    {% endfor %}
+
+    <a href="/unit/all">&larr; Back to all units</a>
+</body>
+</html>

@@ -1,0 +1,117 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Fighters | Army Database</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+
+    <h1>Army Fighter Database</h1>
+
+    <p>
+        <a href="{% url 'add_unit' %}">Add New Fighter</a>
+    </p>
+
+    {% if messages %}
+        {% for message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+
+    <h2>All Fighters</h2>
+
+    {% if units %}
+        <div class="unit-container">
+
+            {% for unit in units %}
+                <div class="unit-card">
+
+                    {% if unit.profile_image_link %}
+                        <img src="{{ unit.profile_image_link }}"
+                             alt="{{ unit.name }}"
+                             width="50"
+                             height="50">
+                    {% else %}
+                        <div class="no-image">No Image</div>
+                    {% endif %}
+
+                    <h3>
+                        <a href="{% url 'unit_details' unit.id %}">
+                            {{ unit.name }}
+                        </a>
+                    </h3>
+
+                    <p>Type: {{ unit.type }}</p>
+                    <p>Team: {{ unit.team }}</p>
+                    <p>Health: {{ unit.health }}/100</p>
+                    <p>Attack Points: {{ unit.attack_points }}</p>
+
+                    {% if unit.health < 100 %}
+                        <form method="POST"
+                              action="{% url 'heal_unit' unit.id %}">
+                            {% csrf_token %}
+                            <button type="submit">Heal Fighter</button>
+                        </form>
+                    {% endif %}
+
+                    <a href="{% url 'unit_details' unit.id %}">
+                        View Details
+                    </a>
+
+                </div>
+            {% endfor %}
+
+        </div>
+    {% else %}
+        <p>No fighters have been added yet.</p>
+    {% endif %}
+
+
+    <hr>
+
+    <h2>Simulate a Fight</h2>
+
+    <form method="POST" action="{% url 'simulate_fight' %}">
+        {% csrf_token %}
+
+        <label for="unit1">Select First Fighter:</label>
+
+        <select name="unit1_id" id="unit1" required>
+            <option value="">Choose fighter</option>
+
+            {% for unit in units %}
+                {% if unit.health > 0 %}
+                    <option value="{{ unit.id }}">
+                        {{ unit.name }} - {{ unit.team }}
+                    </option>
+                {% endif %}
+            {% endfor %}
+        </select>
+
+        <br><br>
+
+        <label for="unit2">Select Second Fighter:</label>
+
+        <select name="unit2_id" id="unit2" required>
+            <option value="">Choose fighter</option>
+
+            {% for unit in units %}
+                {% if unit.health > 0 %}
+                    <option value="{{ unit.id }}">
+                        {{ unit.name }} - {{ unit.team }}
+                    </option>
+                {% endif %}
+            {% endfor %}
+        </select>
+
+        <br><br>
+
+        <button type="submit">Start Fight</button>
+    </form>
+
+</body>
+</html>

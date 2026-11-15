@@ -1,0 +1,38 @@
+{% load static %}
+<h1>Fighters</h1>
+<a href="{% url 'unit_add' %}">Add fighter</a>
+
+<form id="fight" method="post">
+  {% csrf_token %}
+  <p>Select two fighters from different teams: <button>Simulate</button></p>
+</form>
+{% if error %}<p style="color:red">{{ error }}</p>{% endif %}
+
+{% for u in units %}
+<div style="border:1px solid #999;padding:8px;margin:8px 0;width:340px;cursor:pointer"
+     onclick="location.href='{% url 'unit_detail' u.id %}'">
+  <img src="{% static 'unit.svg' %}" width="50" height="50" style="float:left;margin-right:8px">
+  <b>{{ u.name }}</b> — <b>{{ u.get_type_display }}</b> (team {{ u.team }})<br>
+  HP {{ u.health }}/{{ u.max_health }}, attack {{ u.attack_points }}<br>
+  <label onclick="event.stopPropagation()">
+    <input type="checkbox" name="fighters" value="{{ u.id }}" form="fight"> select
+  </label>
+  {% if u.health < u.max_health %}
+  <form method="post" action="{% url 'unit_heal' u.id %}" style="display:inline"
+        onclick="event.stopPropagation()">
+    {% csrf_token %}<button>Heal</button>
+  </form>
+  {% endif %}
+  <div style="clear:both"></div>
+</div>
+{% empty %}
+<p>No fighters yet.</p>
+{% endfor %}
+
+<h2>Team statistics</h2>
+<table border="1" cellpadding="5">
+  <tr><th>Team</th><th>Fights</th><th>Damage caused</th><th>Damage taken</th></tr>
+  {% for team, s in stats.items %}
+  <tr><td>{{ team }}</td><td>{{ s.fights }}</td><td>{{ s.caused }}</td><td>{{ s.taken }}</td></tr>
+  {% endfor %}
+</table>

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>War Simulator</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; background: #171114; color: #f2eaeb; }
+    header { padding: 14px 20px; background: #2d171a; border-bottom: 2px solid #c9323a;
+             display: flex; gap: 16px; align-items: center; }
+    header b { font-size: 16px; }
+    header a { color: #ff9a93; margin-right: 12px; text-decoration: none; }
+    main { padding: 20px; max-width: 1000px; margin: 0 auto; }
+    h2 { font-size: 16px; margin: 24px 0 10px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #3b2328; }
+    th { color: #c2a5a9; font-size: 12px; text-transform: uppercase; }
+    .num { text-align: right; }
+    .stats { color: #c2a5a9; font-size: 14px; margin: 0; }
+    button { font: inherit; background: #c9323a; color: #fff; border: 0; padding: 8px 14px;
+             border-radius: 6px; cursor: pointer; }
+    button:hover { background: #e03d45; }
+    button.grey { background: #3b2328; }
+    form { display: inline; }
+    a { color: #ff9a93; }
+    .bar { background: #3b2328; height: 6px; border-radius: 3px; width: 80px; display: inline-block; }
+    .bar i { display: block; height: 100%; background: #3ddc97; border-radius: 3px; }
+    /* The two sides of a fight -- kept distinct from the red chrome. */
+    .blue { color: #6ea8ff; } .red { color: #ff6b6b; } .muted { color: #c2a5a9; }
+  </style>
+</head>
+<body>
+<header>
+  <b>⚔ War Simulator</b>
+  <nav>
+    <a href="{% url 'war:index' %}">Register</a>
+    <a href="{% url 'war:fights' %}">Fights</a>
+    <a href="{% url 'war:simulate' %}">Simulate</a>
+    <a href="/admin/">Admin</a>
+  </nav>
+</header>
+<main>
+  <p class="stats">
+    {{ drafted }}/{{ registered }} drafted ·
+    {{ n_fights }} fights · {{ n_events }} events ·
+    {{ n_simulated }} simulated
+  </p>
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

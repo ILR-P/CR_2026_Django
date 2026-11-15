@@ -1,0 +1,19 @@
+<details class="panel fight" {% if forloop.first %}open{% endif %}>
+  <summary>
+    <span>Fight #{{ fight.pk }}</span>
+    <span class="badge {{ fight.unit_a.team }}">{{ fight.unit_a.name }}</span> <span class="muted">vs</span>
+    <span class="badge {{ fight.unit_b.team }}">{{ fight.unit_b.name }}</span>
+    <span class="winner">🏆 {{ fight.winner.name|default:"—" }}</span>
+  </summary>
+  <p class="muted" style="margin:.5rem 0 0">{{ fight.created_at|date:"j M Y, H:i" }} · {{ fight.steps.all|length }} hits</p>
+  <table>
+    <tr><th class="num">#</th><th>Attacker</th><th>Defender</th><th class="num">Damage</th><th class="num">Attacker HP</th><th class="num">Defender HP</th></tr>
+    {% for s in fight.steps.all %}
+    <tr>
+      <td class="num">{{ s.number }}</td><td>{{ s.attacker.name }}</td><td>{{ s.defender.name }}</td>
+      <td class="num">{{ s.points }}</td><td class="num">{{ s.attacker_health }}</td>
+      <td class="num {% if s.defender_health == 0 %}dead{% endif %}">{{ s.defender_health }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</details>

@@ -1,0 +1,14 @@
+<!-- Task 4b: Team Statistics Component -->
+    <div style="margin-top: 40px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h3 style="margin-top: 0; border-bottom: 2px solid #dee2e6; padding-bottom: 8px;">📊 War Statistics Dashboard</h3>
+        <div style="display: flex; gap: 20px; justify-content: space-around;">
+            {% for team_name, stats in team_stats.items %}
+                <div style="flex: 1; background: #f8f9fa; padding: 15px; border-radius: 6px; border-left: 5px solid {% if team_name == 'Blue' %}#007bff{% else %}#dc3545{% endif %};">
+                    <h4 style="margin: 0 0 10px; color: {% if team_name == 'Blue' %}#007bff{% else %}#dc3545{% endif %};">{{ team_name }} Team</h4>
+                    <p style="margin: 5px 0; font-size: 0.95em;">Total Fights: <strong>{{ stats.fights_count }}</strong></p>
+                    <p style="margin: 5px 0; font-size: 0.95em;">Damage Caused: <strong>{{ stats.damage_caused }}</strong></p>
+                    <p style="margin: 5px 0; font-size: 0.95em;">Damage Taken: <strong>{{ stats.damage_taken }}</strong></p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>

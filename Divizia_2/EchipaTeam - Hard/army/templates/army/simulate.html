@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>War Simulator</title>
+    <style>
+        /* Fundal și setări generale */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #1e1e2f; 
+            color: #f1f2f6; 
+            margin: 0; 
+            padding: 20px; 
+        }
+        
+        .container { 
+            max-width: 1100px; 
+            margin: 0 auto; 
+        }
+
+        /* Titlul principal */
+        h1 { 
+            text-align: center; 
+            color: #ff4757; 
+            font-size: 2.5rem; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            margin-bottom: 40px;
+        }
+
+        /* Cardul pentru fiecare luptă */
+        .fight-card { 
+            background: #2f3542; 
+            border-radius: 12px; 
+            box-shadow: 0 8px 16px rgba(0,0,0,0.4); 
+            margin-bottom: 40px; 
+            padding: 25px; 
+            border-left: 6px solid #ff4757; 
+            transition: transform 0.2s ease-in-out;
+        }
+        
+        .fight-card:hover {
+            transform: scale(1.01);
+        }
+
+        /* Antetul cardului */
+        .fight-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 2px solid #57606f; 
+            padding-bottom: 15px; 
+            margin-bottom: 20px; 
+        }
+        
+        .fight-title { 
+            font-size: 1.6rem; 
+            margin: 0; 
+        }
+        
+        .vs { color: #ff4757; font-weight: bold; font-size: 1.2rem; margin: 0 10px; }
+
+        /* Badge pentru status (DONE/RUNNING) */
+        .badge { 
+            padding: 6px 14px; 
+            border-radius: 20px; 
+            font-weight: 900; 
+            font-size: 0.9rem; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+        }
+        .badge.done { background-color: #2ed573; color: #ffffff; }
+        .badge.pending { background-color: #ffa502; color: #ffffff; }
+
+        /* Secțiunea câștigătorului */
+        .winner { 
+            font-size: 1.2rem; 
+            color: #eccc68; 
+            margin-bottom: 20px; 
+            display: inline-block; 
+            font-weight: bold; 
+            background: rgba(236, 204, 104, 0.1); 
+            padding: 8px 15px; 
+            border-radius: 8px; 
+            border: 1px solid rgba(236, 204, 104, 0.3);
+        }
+
+        /* Tabelul cu evenimente */
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            overflow: hidden; 
+            border-radius: 8px; 
+            background-color: #374251;
+        }
+        th, td { 
+            padding: 15px; 
+            text-align: left; 
+        }
+        th { 
+            background-color: #1e272e; 
+            color: #a4b0be; 
+            text-transform: uppercase; 
+            font-size: 0.85rem; 
+            letter-spacing: 1px;
+        }
+        tr { border-bottom: 1px solid #2f3542; }
+        tr:nth-child(even) { background-color: #3f4a5c; }
+        tr:hover { background-color: #57606f; }
+
+        /* Text colorat specific */
+        .damage-text { color: #ff6b81; font-weight: bold; }
+        .health-text { font-weight: bold; color: #2ed573; }
+        
+        .loading-text { text-align:center; color: #ffa502; font-size: 1.2rem; font-weight: bold; margin-bottom: 30px;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚔️ War Simulator: Fights ({{ fights|length }})</h1>
+        
+        {% if running %}
+            <div class="loading-text">
+                ⏳ Luptele sunt simulate în fundal... Se actualizează automat!
+            </div>
+            <!-- Auto-refresh la fiecare 2 secunde cât timp sunt lupte nerezolvate -->
+            <script>setTimeout(function(){ location.reload(); }, 2000);</script>
+        {% endif %}
+
+        {% for fight in fights %}
+        <div class="fight-card">
+            <div class="fight-header">
+                <h2 class="fight-title">
+                    Lupta {{ fight.pk }}: {{ fight.soldier_a.name }} 
+                    <span class="vs">VS</span> 
+                    {{ fight.soldier_b.name }}
+                </h2>
+                <span class="badge {% if fight.status == 'DONE' %}done{% else %}pending{% endif %}">
+                    {{ fight.status }}
+                </span>
+            </div>
+            
+            {% if fight.winner %}
+            <div class="winner">🏆 Câștigător: {{ fight.winner.name }}</div>
+            {% endif %}
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Attacker</th>
+                        <th>Defender</th>
+                        <th>Damage</th>
+                        <th>Defender Health After</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Parcurgem evenimentele cu prefetch_related deja făcut în views.py -->
+                    {% for event in fight.events.all %}
+                    <tr>
+                        <td style="color: #a4b0be;">{{ event.sequence }}</td>
+                        <td style="font-weight: bold;">{{ event.attacker.name }}</td>
+                        <td>{{ event.defender.name }}</td>
+                        <td class="damage-text">-{{ event.damage }}</td>
+                        <td class="health-text">{{ event.defender_health_after }} ❤️</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% empty %}
+            <p style="text-align: center; font-size: 1.2rem; color: #a4b0be;">Nu există nicio luptă de afișat momentan.</p>
+        {% endfor %}
+    </div>
+</body>
+</html>

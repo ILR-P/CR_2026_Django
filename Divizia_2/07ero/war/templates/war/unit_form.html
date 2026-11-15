@@ -1,0 +1,13 @@
+{% extends "war/base.html" %}
+{% block title %}Add unit{% endblock %}
+{% block content %}
+<h1>Add a fighter</h1>
+<form method="post" class="stack" novalidate>
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+  {% for field in form %}
+    <p>{{ field.label_tag }}{{ field }}{{ field.errors }}</p>
+  {% endfor %}
+  <button type="submit">Add</button>
+</form>
+{% endblock %}

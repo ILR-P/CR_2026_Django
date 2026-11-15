@@ -1,0 +1,16 @@
+<div class="fight">
+  <h3>
+    <a href="{% url 'fight_detail' fight.pk %}">{{ fight.unit_a.name }} ({{ fight.unit_a.team }})
+    vs {{ fight.unit_b.name }} ({{ fight.unit_b.team }})</a>
+  </h3>
+  <p>Winner: <strong>{{ fight.winner.name }}</strong> &middot; {{ fight.created_at }}</p>
+  <table>
+    <tr><th>#</th><th>Attacker</th><th>Defender</th><th>Roll</th><th>Damage</th><th>Attacker HP</th><th>Defender HP</th></tr>
+    {% for s in fight.steps.all %}
+      <tr>
+        <td>{{ s.order }}</td><td>{{ s.attacker.name }}</td><td>{{ s.defender.name }}</td>
+        <td>{{ s.points }}</td><td>{{ s.damage }}</td><td>{{ s.attacker_health }}</td><td>{{ s.defender_health }}</td>
+      </tr>
+    {% endfor %}
+  </table>
+</div>

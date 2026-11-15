@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Battle Results</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 0 15px; background: #fdfdfd; }
+        .banner { background: #343a40; color: white; padding: 20px; border-radius: 6px; text-align: center; margin-bottom: 20px; }
+        .step { background: white; padding: 10px 15px; margin-bottom: 10px; border-left: 4px solid #007bff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .winner { color: #28a745; font-weight: bold; }
+        a { display: inline-block; margin-top: 20px; text-decoration: none; color: #007bff; }
+    </style>
+</head>
+<body>
+    <div class="banner">
+        <h2>Battle #{{ fight.id }} Concluded</h2>
+        <p>{{ fight.fighter1.name }} ({{ fight.fighter1.team }}) vs {{ fight.fighter2.name }} ({{ fight.fighter2.team }})</p>
+        <p>Winner: <span class="winner">{% if fight.winner %}{{ fight.winner.name }}{% else %}Draw{% endif %}</span></p>
+    </div>
+
+    <h3>Battle Step-by-Step Log:</h3>
+    {% for step in steps %}
+        <div class="step">
+            <strong>Step {{ step.step_number }}:</strong>
+            {{ step.attacker.name }} attacks {{ step.defender.name }} for <strong>{{ step.damage_dealt }}</strong> damage!
+            <br><small>Health status -> {{ step.attacker.name }}: {{ step.attacker_health_after }} | {{ step.defender.name }}: {{ step.defender_health_after }}</small>
+        </div>
+    {% endfor %}
+
+    <br>
+    <a href="/fight/simulate">⚔️ Simulate Another Fight</a> |
+    <a href="/unit/all">Back to Units List</a>
+</body>
+</html>

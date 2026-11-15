@@ -1,0 +1,50 @@
+{% extends "units/base.html" %}
+{% block title %}Units{% endblock %}
+{% block content %}
+<h1>Units</h1>
+
+<form id="simulate-form" method="post" action="{% url 'simulate_fight' %}" style="margin-bottom:16px;">
+  {% csrf_token %}
+  <button type="submit">Simulate fight</button>
+  <span class="muted">Select two units from different teams</span>
+</form>
+
+{% for unit in units %}
+  <div class="card unit-card" onclick="location.href='{% url 'unit_detail' unit.id %}'">
+    <input type="checkbox" name="units" value="{{ unit.id }}" form="simulate-form"
+           onclick="event.stopPropagation()">
+    <img src="{{ unit.profile_image_link }}" alt="{{ unit.name }}">
+    <div class="info">
+      <strong>{{ unit.name }}</strong> ({{ unit.type }})
+      <span class="badge {{ unit.team }}">{{ unit.team }}</span>
+      <div class="muted">Health {{ unit.health }} / 100 · Attack {{ unit.attack_points }}</div>
+      <div class="bar"><span style="width: {{ unit.health }}%"></span></div>
+    </div>
+    {% if unit.health < 100 %}
+      <form method="post" action="{% url 'unit_heal' unit.id %}" onclick="event.stopPropagation()">
+        {% csrf_token %}
+        <button type="submit" class="btn-heal">Heal</button>
+      </form>
+    {% endif %}
+  </div>
+{% empty %}
+  <p>No units yet.</p>
+{% endfor %}
+
+<h2 style="margin-top:32px;">Statistics</h2>
+<div class="card">
+  <table>
+    <tr>
+      <th>Team</th><th>Fights</th><th>Damage caused</th><th>Damage taken</th>
+    </tr>
+    {% for s in stats %}
+      <tr>
+        <td><span class="badge {{ s.team }}">{{ s.team }}</span></td>
+        <td>{{ s.fights }}</td>
+        <td>{{ s.damage_caused }}</td>
+        <td>{{ s.damage_taken }}</td>
+      </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

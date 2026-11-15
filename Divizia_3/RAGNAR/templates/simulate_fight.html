@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simulate Fight</title>
+    <style>
+        body { font-family: sans-serif; max-width: 500px; margin: 40px auto; padding: 0 15px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        select { width: 100%; padding: 8px; box-sizing: border-box; }
+        .error { color: #d9534f; margin-bottom: 15px; font-weight: bold; }
+        button { padding: 10px 20px; background: #dc3545; color: white; border: none; cursor: pointer; font-size: 1em; }
+        button:hover { background: #c82333; }
+        a { display: inline-block; margin-top: 15px; text-decoration: none; color: #007bff; }
+    </style>
+</head>
+<body>
+    <h2>⚔️ Simulate War Battle</h2>
+    <a href="/unit/all">&larr; Back to Units</a>
+
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="fighter1">Select Fighter 1 (e.g. Blue Team):</label>
+            <select name="fighter1" id="fighter1" required>
+                <option value="">-- Choose Unit --</option>
+                {% for unit in units %}
+                    <option value="{{ unit.id }}">{{ unit.name }} ({{ unit.team }} - {{ unit.unit_type }})</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="fighter2">Select Fighter 2 (e.g. Red Team):</label>
+            <select name="fighter2" id="fighter2" required>
+                <option value="">-- Choose Unit --</option>
+                {% for unit in units %}
+                    <option value="{{ unit.id }}">{{ unit.name }} ({{ unit.team }} - {{ unit.unit_type }})</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit">Start Simulation 🚀</button>
+    </form>
+</body>
+</html>

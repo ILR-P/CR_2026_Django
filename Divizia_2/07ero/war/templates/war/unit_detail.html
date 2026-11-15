@@ -1,0 +1,23 @@
+{% extends "war/base.html" %}
+{% block title %}{{ unit.name }}{% endblock %}
+{% block content %}
+<h1>{{ unit.name }}</h1>
+<div class="card">
+  {% include "war/_avatar.html" %}
+  <div class="grow">
+    <div>Type: {{ unit.type }}</div>
+    <div>Team: <span class="{{ unit.team }}">{{ unit.team }}</span></div>
+    <div>Health: {{ unit.health }}/100</div>
+    <div>Attack points: {{ unit.attack_points }}</div>
+    <div>Profile image link: {{ unit.profile_image_link|default:"&mdash;" }}</div>
+  </div>
+  {% if unit.can_heal %}
+    <form method="post" action="{% url 'unit-heal' unit.pk %}">
+      {% csrf_token %}<input type="hidden" name="next" value="{% url 'unit-detail' unit.pk %}"><button type="submit">Heal</button>
+    </form>
+  {% endif %}
+</div>
+<h2>Fights</h2>
+{% for fight in fights %}{% include "war/_fight_card.html" %}{% empty %}<p>No fights yet.</p>{% endfor %}
+<p><a href="{% url 'unit-all' %}">&larr; Back to all units</a></p>
+{% endblock %}

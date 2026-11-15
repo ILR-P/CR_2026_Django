@@ -1,0 +1,29 @@
+{% extends "army/base.html" %}
+{% block title %}{{ unit.name }}{% endblock %}
+{% block content %}
+<h1>{{ unit.name }}</h1>
+{% if unit.profile_image_link %}
+  <img src="{{ unit.profile_image_link }}" width="120" alt="{{ unit.name }}">
+{% endif %}
+<table>
+  <tr><th>Type</th><td>{{ unit.unit_type }}</td></tr>
+  <tr><th>Team</th><td>{{ unit.team }}</td></tr>
+  <tr><th>Health</th><td>{{ unit.health }}/{{ max_health }}</td></tr>
+  <tr><th>Attack points</th><td>{{ unit.attack_points }}</td></tr>
+  <tr><th>Profile image</th><td>{{ unit.profile_image_link|default:"-" }}</td></tr>
+</table>
+{% if unit.needs_heal %}
+  <form method="post" action="{% url 'unit_heal' unit.pk %}">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{% url 'unit_detail' unit.pk %}">
+    <button type="submit">Heal</button>
+  </form>
+{% endif %}
+
+<h2>Fights</h2>
+{% for fight in fights %}
+  {% include "army/fight_card.html" %}
+{% empty %}
+  <p>This unit has not fought yet.</p>
+{% endfor %}
+{% endblock %}

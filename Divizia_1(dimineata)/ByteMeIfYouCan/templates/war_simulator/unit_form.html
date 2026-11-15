@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Add New Fighter - Django War Simulator{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3 border-bottom">
+                <h4 class="card-title mb-0 fw-bold">Create New Fighter</h4>
+            </div>
+            <div class="card-body p-4">
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger" role="alert">
+                        {% for error in form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <form method="post" action="{% url 'unit_create' %}" novalidate>
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label fw-semibold">Name</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.name.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.unit_type.id_for_label }}" class="form-label fw-semibold">Unit Type</label>
+                            {{ form.unit_type }}
+                            {% if form.unit_type.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.unit_type.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.team.id_for_label }}" class="form-label fw-semibold">Team</label>
+                            {{ form.team }}
+                            {% if form.team.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.team.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.health.id_for_label }}" class="form-label fw-semibold">Health (0 - 100)</label>
+                            {{ form.health }}
+                            {% if form.health.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.health.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.attack_points.id_for_label }}" class="form-label fw-semibold">Attack Points (0 - 50)</label>
+                            {{ form.attack_points }}
+                            {% if form.attack_points.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.attack_points.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="{{ form.profile_image_link.id_for_label }}" class="form-label fw-semibold">Profile Image Link (URL)</label>
+                        {{ form.profile_image_link }}
+                        {% if form.profile_image_link.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.profile_image_link.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{% url 'unit_all' %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4 fw-bold">Add</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

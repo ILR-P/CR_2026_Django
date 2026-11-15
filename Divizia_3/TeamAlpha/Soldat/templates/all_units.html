@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head><title>All Fighters</title></head>
+<body>
+    <h1>Army Roster</h1>
+    <a href="{% url 'add_unit' %}">+ Add New Fighter</a>
+
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li style="color: {% if message.tags == 'error' %}red{% else %}green{% endif %};">
+                    {{ message }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <!-- Simulation Form -->
+    <form method="POST" action="{% url 'all_units' %}">
+        {% csrf_token %}
+        <button type="submit" style="margin: 15px 0; padding: 8px 16px;">Simulate</button>
+
+        <div style="display: flex; flex-wrap: wrap; gap: 15px;">
+            {% for unit in units %}
+            <div onclick="window.location.href='{% url 'unit_detail' unit.id %}'"
+                 style="border: 2px solid {{ unit.team|lower }}; padding: 10px; width: 260px; cursor: pointer; display: flex; align-items: center; gap: 10px;">
+
+                <!-- Checkbox to select for fight -->
+                <input type="checkbox" name="selected_units" value="{{ unit.id }}" onclick="event.stopPropagation();">
+
+                <!-- 50x50 Profile Picture on the left -->
+                <img src="{{ unit.profile_image_link }}" alt="{{ unit.name }}" width="50" height="50" style="object-fit: cover;">
+
+                <div>
+                    <strong>{{ unit.name }}</strong> ({{ unit.unit_type }})<br>
+                    <small>Team: {{ unit.team }} | HP: {{ unit.health }}/100</small><br>
+
+                    {% if unit.health < 100 %}
+                        <button type="submit"
+                                formaction="{% url 'heal_unit' unit.id %}"
+                                onclick="event.stopPropagation();"
+                                style="margin-top: 5px;">
+                            Heal
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </form>
+
+    <hr>
+
+    <!-- Task 4b: Team Statistics Component -->
+    <h2>Battle Statistics</h2>
+    <table border="1" cellpadding="8">
+        <thead>
+            <tr>
+                <th>Team</th>
+                <th>Number of Fights</th>
+                <th>Overall Damage Caused</th>
+                <th>Overall Damage Taken</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for team, data in stats.items %}
+            <tr>
+                <td><strong>{{ team }}</strong></td>
+                <td>{{ data.fights }}</td>
+                <td>{{ data.damage_caused }}</td>
+                <td>{{ data.damage_taken }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

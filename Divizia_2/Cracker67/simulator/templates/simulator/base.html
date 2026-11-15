@@ -1,0 +1,22 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Django War Simulator</title>
+    <link rel="stylesheet" href="{% static 'simulator/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <h1>⚔️ Django War Simulator</h1>
+            <div class="nav-links">
+                <a href="{% url 'all_units' %}">All Fighters</a>
+                <a href="{% url 'add_unit' %}">+ Add Unit</a>
+            </div>
+        </nav>
+
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

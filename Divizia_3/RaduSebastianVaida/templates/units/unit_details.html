@@ -1,0 +1,110 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ unit.name }} | Fighter Details</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+
+    <h1>Fighter Details</h1>
+
+    <div class="unit-card">
+
+        {% if unit.profile_image_link %}
+            <img src="{{ unit.profile_image_link }}"
+                 alt="{{ unit.name }}"
+                 width="50"
+                 height="50">
+        {% endif %}
+
+        <h2>{{ unit.name }}</h2>
+
+        <p>Type: {{ unit.type }}</p>
+        <p>Team: {{ unit.team }}</p>
+        <p>Health: {{ unit.health }}/100</p>
+        <p>Attack Points: {{ unit.attack_points }}</p>
+
+    </div>
+
+    <hr>
+
+    <h2>Fight History</h2>
+
+    {% if fights %}
+        {% for fight in fights %}
+
+            <div class="fight-card">
+
+                <h3>Fight #{{ fight.id }}</h3>
+
+                <p>
+                    Opponent:
+                    {% if fight.unit1.id == unit.id %}
+                        {{ fight.unit2.name }}
+                    {% else %}
+                        {{ fight.unit1.name }}
+                    {% endif %}
+                </p>
+
+                <p>Date: {{ fight.created_at }}</p>
+
+                <p>
+                    Winner:
+                    {% if fight.winner %}
+                        {{ fight.winner.name }}
+                    {% else %}
+                        Draw
+                    {% endif %}
+                </p>
+
+                <h4>Attack History</h4>
+
+                {% for turn in fight.turns.all %}
+                    <div class="turn-card">
+
+                        <p>Turn: {{ turn.turn_number }}</p>
+
+                        <p>
+                            Attacker: {{ turn.attacker.name }}
+                        </p>
+
+                        <p>
+                            Defender: {{ turn.defender.name }}
+                        </p>
+
+                        <p>
+                            Damage dealt: {{ turn.attack_points }}
+                        </p>
+
+                        <p>
+                            Attacker health: {{ turn.attacker_health }}
+                        </p>
+
+                        <p>
+                            Defender health: {{ turn.defender_health }}
+                        </p>
+
+                    </div>
+                {% empty %}
+                    <p>No attack history available.</p>
+                {% endfor %}
+
+            </div>
+
+            <hr>
+
+        {% endfor %}
+    {% else %}
+        <p>This fighter has not participated in any fights yet.</p>
+    {% endif %}
+
+    <p>
+        <a href="{% url 'all_units' %}">Back to All Fighters</a>
+    </p>
+
+</body>
+</html>

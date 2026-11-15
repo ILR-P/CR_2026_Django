@@ -1,0 +1,10 @@
+<div class="card" style="display:block">
+  <strong>{{ fight.fighter_a.name }} ({{ fight.fighter_a.team }}) vs {{ fight.fighter_b.name }} ({{ fight.fighter_b.team }})</strong>
+  &mdash; winner: <strong class="{{ fight.winner.team }}">{{ fight.winner.name }}</strong>
+  <ol class="steps">
+    {% for s in fight.steps.all %}
+      <li>{{ s.attacker.name }} hits {{ s.defender.name }} for {{ s.damage }}
+        (health: {{ s.attacker.name }} {{ s.attacker_health }}, {{ s.defender.name }} {{ s.defender_health }})</li>
+    {% endfor %}
+  </ol>
+</div>

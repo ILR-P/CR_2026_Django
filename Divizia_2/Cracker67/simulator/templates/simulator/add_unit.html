@@ -1,0 +1,12 @@
+{% extends 'simulator/base.html' %}
+
+{% block content %}
+<div class="form-card">
+    <h2 style="margin-bottom: 20px;">Add Fighter Unit</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Add</button>
+    </form>
+</div>
+{% endblock %}

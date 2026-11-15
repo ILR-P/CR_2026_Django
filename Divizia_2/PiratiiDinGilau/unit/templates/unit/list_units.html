@@ -1,0 +1,42 @@
+<h3>Stats</h3>
+<ul>
+    <li>Blue Team: Fights: {{ stats.Blue.fights }}, Dmg Caused: {{ stats.Blue.damage_caused }}, Dmg Taken: {{ stats.Blue.damage_taken }}</li>
+    <li>Red Team: Fights: {{ stats.Red.fights }}, Dmg Caused: {{ stats.Red.damage_caused }}, Dmg Taken: {{ stats.Red.damage_taken }}</li>
+</ul>
+
+<form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="simulate" value="1">
+    <select name="unit1_id">{% for u in units %}<option value="{{ u.id }}">{{ u.name }} ({{ u.team }})</option>{% endfor %}</select>
+    <select name="unit2_id">{% for u in units %}<option value="{{ u.id }}">{{ u.name }} ({{ u.team }})</option>{% endfor %}</select>
+    <button type="submit">Simulate Fight</button>
+</form>
+
+{% for unit in units %}
+<div class="card" onclick="window.location.href='{% url 'unit_detail' unit.id %}'" style="cursor: pointer; border:1px solid #ccc; padding: 10px; margin: 5px;">
+    <img src="{{ unit.profile_image }}" width="50" height="50" style="float: left; margin-right: 10px;">
+    <h4>{{ unit.name }} - {{ unit.unit_type }} ({{ unit.team }})</h4>
+    <p>Health: {{ unit.health }}/100 | Attack: {{ unit.attack_points }}</p>
+
+    {% if unit.health < 100 %}
+    <form method="post" onclick="event.stopPropagation();">
+        {% csrf_token %}
+        <input type="hidden" name="heal" value="1">
+        <input type="hidden" name="unit_id" value="{{ unit.id }}">
+        <button type="submit">Heal</button>
+    </form>
+    {% endif %}
+</div>
+{% endfor %}
+{% if messages %}
+<ul class="messages" style="list-style: none; padding: 0;">
+    {% for message in messages %}
+    <li style="padding: 10px; margin-bottom: 10px; border-radius: 5px;
+        {% if message.tags == 'error' %}background-color: #ffcccc; color: #cc0000;
+        {% elif message.tags == 'success' %}background-color: #ccffcc; color: #006600;
+        {% endif %}">
+        {{ message }}
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}

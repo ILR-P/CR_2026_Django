@@ -1,0 +1,73 @@
+{% extends 'simulator/base.html' %}
+
+{% block content %}
+    {% for message in messages %}
+        <div class="alert-error">{{ message }}</div>
+    {% endfor %}
+
+    <form method="post" action="{% url 'simulate_fight' %}">
+        {% csrf_token %}
+        <div class="units-grid">
+            {% for unit in units %}
+            <div class="unit-card {{ unit.team|lower }}" onclick="window.location.href='{% url 'unit_detail' unit.id %}'">
+                <input type="checkbox" name="selected_units" value="{{ unit.id }}" onclick="event.stopPropagation()">
+                <img src="{{ unit.profile_image }}" width="50" height="50" alt="profile">
+                
+                <div class="unit-info">
+                    <h3>{{ unit.name }}</h3>
+                    <div class="unit-meta">{{ unit.unit_type }} • <span class="team-{{ unit.team|lower }}">{{ unit.team }}</span></div>
+                    
+                    <div class="health-bar-bg">
+                        <div class="health-bar-fill" style="width: {{ unit.health }}%;"></div>
+                    </div>
+                    <div style="font-size: 0.8rem; margin-bottom: 8px;">HP: {{ unit.health }}/100 | ATK: {{ unit.attack_points }}</div>
+                    
+                    <div style="display: flex; gap: 6px;">
+                        {% if unit.health < 100 %}
+                            <button type="submit" form="heal-{{ unit.id }}" class="btn btn-heal" onclick="event.stopPropagation()">Heal</button>
+                        {% endif %}
+                        <button type="submit" form="delete-{{ unit.id }}" class="btn btn-delete" onclick="event.stopPropagation()">Delete</button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <button type="submit" class="btn btn-primary">⚔️ Simulate Fight</button>
+    </form>
+
+    {% for unit in units %}
+        {% if unit.health < 100 %}
+            <form id="heal-{{ unit.id }}" method="post" action="{% url 'heal_unit' unit.id %}">
+                {% csrf_token %}
+            </form>
+        {% endif %}
+        <form id="delete-{{ unit.id }}" method="post" action="{% url 'delete_unit' unit.id %}">
+            {% csrf_token %}
+        </form>
+    {% endfor %}
+
+    <div class="stats-section">
+        <h2>Team Statistics</h2>
+        <table>
+            <tr>
+                <th>Team</th>
+                <th>Fights</th>
+                <th>Overall Damage Caused</th>
+                <th>Overall Damage Taken</th>
+            </tr>
+            <tr>
+                <td class="team-blue">Blue</td>
+                <td>{{ stats.Blue.fights }}</td>
+                <td>{{ stats.Blue.damage_caused }}</td>
+                <td>{{ stats.Blue.damage_taken }}</td>
+            </tr>
+            <tr>
+                <td class="team-red">Red</td>
+                <td>{{ stats.Red.fights }}</td>
+                <td>{{ stats.Red.damage_caused }}</td>
+                <td>{{ stats.Red.damage_taken }}</td>
+            </tr>
+        </table>
+    </div>
+{% endblock %}

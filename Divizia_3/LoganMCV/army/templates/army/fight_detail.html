@@ -1,0 +1,7 @@
+{% extends "army/base.html" %}
+{% block title %}Fight{% endblock %}
+{% block content %}
+<h1>Fight result</h1>
+{% include "army/fight_card.html" %}
+<p><a href="{% url 'unit_list' %}">Back to units</a></p>
+{% endblock %}

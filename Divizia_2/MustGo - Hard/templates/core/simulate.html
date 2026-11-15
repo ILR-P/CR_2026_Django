@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CodeRun War Simulator</title>
+  <style>
+    body { max-width: 960px; margin: 40px auto; padding: 0 20px; font: 16px/1.5 system-ui, sans-serif; color: #172033; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
+    .notice { padding: 16px; background: #fff5d6; border-left: 4px solid #b77b00; }
+  </style>
+</head>
+<body>
+  <h1>CodeRun War Simulator</h1>
+  <p class="notice">Fights share persistent soldier health. Each fight replays its original attacks in order. Refresh to see background results.</p>
+  <h2>Fight results</h2>
+  {% for fight in fights %}
+  <section>
+    <h3>Fight {{ fight.id }}: {{ fight.blue.name }} vs {{ fight.red.name }}</h3>
+    <p>Status: {{ fight.status }}. Blue health: {{ fight.blue_start_health|default_if_none:"pending" }} → {{ fight.blue_end_health|default_if_none:"pending" }}.
+       Red health: {{ fight.red_start_health|default_if_none:"pending" }} → {{ fight.red_end_health|default_if_none:"pending" }}.</p>
+    {% if fight.error %}<p class="notice">{{ fight.error }}</p>{% endif %}
+    <details><summary>Attack history</summary>
+      <table><thead><tr><th>Position</th><th>Attacker</th><th>Defender</th><th>Damage</th><th>Defender health after attack</th></tr></thead>
+      <tbody>{% for event in fight.events.all %}<tr><td>{{ event.position }}</td><td>{{ event.attacker_id }}</td><td>{{ event.defender_id }}</td><td>{{ event.damage }}</td><td>{{ event.remaining_health|default_if_none:"pending" }}</td></tr>{% empty %}<tr><td colspan="5">No attacks supplied.</td></tr>{% endfor %}</tbody></table>
+    </details>
+  </section>
+  {% empty %}<p>No fight data imported yet.</p>{% endfor %}
+  <h2>Drafted soldiers</h2>
+  <p>{{ people|length }} drafted soldiers currently saved. Refresh to see drafting progress.</p>
+  <table>
+    <thead><tr><th>ID</th><th>Name</th><th>Rank</th><th>Initial health</th><th>Current health</th></tr></thead>
+    <tbody>
+      {% for person in people %}
+      <tr><td>{{ person.id }}</td><td>{{ person.name }}</td><td>{{ person.rank }}</td><td>{{ person.draft_health|default_if_none:"—" }}</td><td>{{ person.health|default_if_none:"—" }}</td></tr>
+      {% empty %}
+      <tr><td colspan="5">No soldiers have been drafted yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

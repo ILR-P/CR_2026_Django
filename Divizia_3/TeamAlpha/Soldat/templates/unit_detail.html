@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head><title>{{ unit.name }} - Details</title></head>
+<body>
+    <a href="{% url 'all_units' %}">&larr; Back to Roster</a>
+
+    <div style="border: 2px solid {{ unit.team|lower }}; padding: 15px; margin-top: 10px; max-width: 500px;">
+        <img src="{{ unit.profile_image_link }}" alt="{{ unit.name }}" width="100" height="100" style="object-fit: cover;">
+        <h1>{{ unit.name }}</h1>
+        <ul>
+            <li><strong>Type:</strong> {{ unit.unit_type }}</li>
+            <li><strong>Team:</strong> {{ unit.team }}</li>
+            <li><strong>Health:</strong> {{ unit.health }} / 100</li>
+            <li><strong>Attack Points:</strong> {{ unit.attack_points }}</li>
+        </ul>
+    </div>
+
+    <h2>Fight History</h2>
+    {% for fight in fights %}
+        <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 5px;">
+            <h3>{{ fight.fighter1.name }} ({{ fight.fighter1.team }}) vs {{ fight.fighter2.name }} ({{ fight.fighter2.team }})</h3>
+            <p><strong>Winner:</strong> {{ fight.winner.name }}</p>
+            <ol>
+                {% for step in fight.steps.all %}
+                    <li>
+                        <strong>{{ step.attacker.name }}</strong> attacked <strong>{{ step.defender.name }}</strong>
+                        for <strong>{{ step.damage }}</strong> damage.
+                        (Status: {{ step.attacker.name }} {{ step.attacker_health_after }} HP | {{ step.defender.name }} {{ step.defender_health_after }} HP)
+                    </li>
+                {% endfor %}
+            </ol>
+        </div>
+    {% empty %}
+        <p>This fighter has not participated in any fights yet.</p>
+    {% endfor %}
+</body>
+</html>

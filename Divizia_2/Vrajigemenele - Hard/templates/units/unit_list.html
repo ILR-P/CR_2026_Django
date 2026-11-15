@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Army{% endblock %}
+{% block content %}
+<h1>The army</h1>
+<p class="sub">Tick two fighters from opposing teams, then press Simulate. Click a card for its full record.</p>
+
+{% if units %}
+<div class="cards">
+{% for unit in units %}
+  <article class="unit-card team-{{ unit.team }}">
+    <label class="pick" title="Select for a fight"><input type="checkbox" name="units" value="{{ unit.pk }}" form="fight-form" aria-label="Select {{ unit.name }}"></label>
+    {% include "units/_avatar.html" %}
+    <div class="info">
+      <a class="name" href="{{ unit.get_absolute_url }}">{{ unit.name }}</a>
+      <div class="meta"><span class="badge">{{ unit.get_type_display }}</span><span class="badge {{ unit.team }}">{{ unit.get_team_display }}</span></div>
+      {% include "units/_health.html" %}
+      <div class="hp">{{ unit.health }}/100 HP · ⚔ {{ unit.attack_points }}</div>
+    </div>
+    {% if unit.needs_heal %}
+    <form method="post" action="{% url 'unit-heal' unit.pk %}">{% csrf_token %}<button class="btn heal small">Heal</button></form>
+    {% endif %}
+  </article>
+{% endfor %}
+</div>
+{% else %}
+<div class="panel empty">No units yet. <a href="{% url 'unit-create' %}">Recruit the first one</a>.</div>
+{% endif %}
+
+<form id="fight-form" method="post" action="{% url 'unit-all' %}" class="fightbar">
+  {% csrf_token %}
+  <div>
+    <strong id="picked">0 / 2 selected</strong>
+    {{ fight_form.units.errors }}
+  </div>
+  <button class="btn" type="submit" id="go">⚔ Simulate</button>
+</form>
+
+<h2>Team statistics</h2>
+<div class="stats">
+{% for s in stats %}
+  <section class="panel stat {{ s.team }}">
+    <span class="badge {{ s.team }}">{{ s.label }}</span>
+    <dl>
+      <dt>Fights fought</dt><dd>{{ s.fights }}</dd>
+      <dt>Fights won</dt><dd>{{ s.won }}</dd>
+      <dt>Damage caused</dt><dd>{{ s.caused }}</dd>
+      <dt>Damage taken</dt><dd>{{ s.taken }}</dd>
+    </dl>
+  </section>
+{% endfor %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  // allow at most two ticked fighters; the server validates again
+  var boxes = [].slice.call(document.querySelectorAll('input[name=units]'));
+  var label = document.getElementById('picked');
+  function sync() {
+    var n = boxes.filter(function (b) { return b.checked; }).length;
+    label.textContent = n + ' / 2 selected';
+    boxes.forEach(function (b) { b.disabled = n >= 2 && !b.checked; });
+    document.getElementById('go').disabled = n !== 2;
+  }
+  boxes.forEach(function (b) { b.addEventListener('change', sync); }); sync();
+</script>
+{% endblock %}

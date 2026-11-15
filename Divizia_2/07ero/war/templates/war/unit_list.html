@@ -1,0 +1,36 @@
+{% extends "war/base.html" %}
+{% block title %}All units{% endblock %}
+{% block content %}
+<h1>Army</h1>
+<form id="simulate-form" method="post" action="{% url 'unit-simulate' %}">
+  {% csrf_token %}
+  <button type="submit">Simulate</button> <small>Select two fighters from different teams.</small>
+</form>
+{% for unit in units %}
+  <div class="card">
+    {% include "war/_avatar.html" %}
+    <div class="grow">
+      <a class="stretched" href="{% url 'unit-detail' unit.pk %}"><strong>{{ unit.name }}</strong></a>
+      <span class="badge">{{ unit.type }}</span>
+      <span class="{{ unit.team }}">{{ unit.team }}</span>
+      <div><small>Health {{ unit.health }}/100</small></div>
+    </div>
+    {% if unit.can_heal %}
+      <form method="post" action="{% url 'unit-heal' unit.pk %}" class="above">
+        {% csrf_token %}<button type="submit">Heal</button>
+      </form>
+    {% endif %}
+    <label class="above"><input type="checkbox" name="fighters" value="{{ unit.pk }}" form="simulate-form"> select</label>
+  </div>
+{% empty %}
+  <p>No fighters yet. <a href="{% url 'unit-add' %}">Add one</a>.</p>
+{% endfor %}
+
+<h2>Statistics</h2>
+<table id="stats">
+  <tr><th>Team</th><th>Fights</th><th>Damage caused</th><th>Damage taken</th></tr>
+  {% for s in stats %}
+    <tr><td class="{{ s.team }}">{{ s.team }}</td><td>{{ s.fights }}</td><td>{{ s.damage_caused }}</td><td>{{ s.damage_taken }}</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

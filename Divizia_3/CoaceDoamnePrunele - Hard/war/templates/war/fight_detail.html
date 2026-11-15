@@ -1,0 +1,32 @@
+{% extends 'war/base.html' %}
+
+{% block content %}
+<p><a href="{% url 'war:fights' %}">← fights</a></p>
+<h2>
+  Fight #{{ fight.external_id }}:
+  <span class="blue">{{ fight.blue.name }}</span> vs <span class="red">{{ fight.red.name }}</span>
+</h2>
+<p class="stats">
+  {% if fight.winner %}Winner: <b>{{ fight.winner.name }}</b>
+  {% elif fight.simulated %}Draw
+  {% else %}Not simulated yet{% endif %}
+</p>
+
+<table>
+  <thead>
+    <tr><th class="num">#</th><th>Attacker</th><th>Defender</th>
+        <th class="num">Damage</th><th class="num">Defender HP after</th></tr>
+  </thead>
+  <tbody>
+    {% for e in events %}
+    <tr>
+      <td class="num">{{ e.sequence }}</td>
+      <td>{{ e.attacker.name }}</td>
+      <td>{{ e.defender.name }}</td>
+      <td class="num">−{{ e.damage }}</td>
+      <td class="num">{{ e.defender_health_after|default_if_none:"—" }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

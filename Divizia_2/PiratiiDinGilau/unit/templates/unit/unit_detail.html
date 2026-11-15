@@ -1,0 +1,15 @@
+<h2>{{ unit.name }} ({{ unit.team }} {{ unit.unit_type }})</h2>
+<img src="{{ unit.profile_image }}" width="150" height="150">
+
+<h3>Fight History</h3>
+{% for fight in fights %}
+<div style="border: 1px solid black; margin-bottom: 10px; padding: 10px;">
+    <p><strong>{{ fight.attacker.name }} vs {{ fight.defender.name }}</strong></p>
+    <p>Winner: {% if fight.winner %}{{ fight.winner.name }}{% else %}Draw{% endif %}</p>
+    <ul>
+        {% for log in fight.fight_log %}
+            <li>{{ log.attacker_name }} attacks {{ log.defender_name }} for {{ log.damage }} damage. ({{ log.defender_name }} health: {{ log.defender_health }})</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endfor %}

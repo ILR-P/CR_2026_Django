@@ -1,0 +1,34 @@
+{% extends 'simulator/base.html' %}
+
+{% block content %}
+<div class="form-card" style="max-width: 100%; margin-bottom: 30px; display: flex; align-items: center; gap: 25px;">
+    <img src="{{ unit.profile_image }}" width="100" height="100" style="border-radius: 12px;" alt="profile">
+    <div>
+        <h2>{{ unit.name }}</h2>
+        <p style="color: #94a3b8; margin-top: 5px;">
+            Type: <strong>{{ unit.unit_type }}</strong> | 
+            Team: <span class="team-{{ unit.team|lower }}">{{ unit.team }}</span> | 
+            Health: <strong>{{ unit.health }}/100</strong> | 
+            Attack Points: <strong>{{ unit.attack_points }}</strong>
+        </p>
+    </div>
+</div>
+
+<h2 style="margin-bottom: 15px;">Fight History</h2>
+{% for fight in fights %}
+    <div class="fight-card">
+        <h3>{{ fight.fighter1.name }} vs {{ fight.fighter2.name }} — 🏆 Winner: {{ fight.winner.name }}</h3>
+        <ul>
+            {% for step in fight.steps.all %}
+                <li>
+                    <strong>{{ step.attacker.name }}</strong> attacked <strong>{{ step.defender.name }}</strong> 
+                    for <strong>{{ step.damage }}</strong> damage. 
+                    ({{ step.attacker.name }} HP: {{ step.attacker_health_after }}, {{ step.defender.name }} HP: {{ step.defender_health_after }})
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+{% empty %}
+    <p style="color: #94a3b8;">No fights recorded for this unit yet.</p>
+{% endfor %}
+{% endblock %}

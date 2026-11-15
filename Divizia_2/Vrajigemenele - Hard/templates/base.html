@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}War Room{% endblock %} · Django War Simulator</title>
+{% block head %}{% endblock %}
+<style>
+  :root{
+    --bg:#f4f1ea; --surface:#fffdf9; --ink:#1f2430; --muted:#6b7080; --line:#e3ddd0;
+    --nav:#1d2433; --nav-ink:#f4f1ea; --accent:#b8892b; --accent-ink:#1d2433;
+    --blue:#2f6fdd; --blue-soft:#e6eefc; --red:#d04545; --red-soft:#fbe9e9;
+    --ok:#2e8b57; --warn:#c98a10; --bad:#c0392b; --shadow:0 1px 2px rgba(20,25,40,.06),0 4px 14px rgba(20,25,40,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{--bg:#141821;--surface:#1c2230;--ink:#e9e6df;--muted:#9aa0b2;--line:#2c3446;--nav:#0e1218;
+      --blue-soft:#1d2c4a;--red-soft:#43222a;--shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3)}
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  a{color:inherit}
+  .nav{background:var(--nav);color:var(--nav-ink);position:sticky;top:0;z-index:20}
+  .nav .wrap{display:flex;align-items:center;gap:1.5rem;padding:.8rem 1rem;flex-wrap:wrap}
+  .brand{font-weight:800;letter-spacing:.04em;text-transform:uppercase;font-size:.95rem;text-decoration:none}
+  .brand span{color:var(--accent)}
+  .nav a.link{text-decoration:none;opacity:.75;padding:.25rem .1rem;border-bottom:2px solid transparent}
+  .nav a.link:hover,.nav a.link.on{opacity:1;border-color:var(--accent)}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 1rem}
+  main.wrap{padding-top:1.5rem;padding-bottom:4rem}
+  h1{font-size:1.8rem;margin:.2rem 0 .3rem;letter-spacing:-.01em}
+  h2{font-size:1.15rem;margin:2rem 0 .8rem}
+  .sub{color:var(--muted);margin:0 0 1.2rem}
+  .msgs{list-style:none;padding:0;margin:0 0 1rem}
+  .msgs li{padding:.7rem 1rem;border-radius:10px;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--ok);margin-bottom:.5rem;box-shadow:var(--shadow)}
+  .msgs li.error{border-left-color:var(--bad)}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:1.2rem 1.3rem;box-shadow:var(--shadow)}
+  .btn{display:inline-block;border:0;border-radius:9px;padding:.55rem 1rem;font:inherit;font-weight:650;cursor:pointer;background:var(--accent);color:var(--accent-ink);text-decoration:none}
+  .btn:hover{filter:brightness(1.07)} .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  .btn.small{padding:.3rem .7rem;font-size:.85rem}
+  .btn.heal{background:var(--ok);color:#fff}
+  /* forms */
+  .field{margin-bottom:1rem}
+  .field label{display:block;font-weight:650;margin-bottom:.25rem}
+  .field input,.field select{width:100%;padding:.6rem .7rem;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit}
+  .field input:focus,.field select:focus{outline:2px solid var(--accent);outline-offset:1px}
+  .field .help{color:var(--muted);font-size:.85rem;margin-top:.2rem}
+  .errorlist{list-style:none;margin:.3rem 0 0;padding:0;color:var(--bad);font-size:.9rem;font-weight:600}
+  .field.has-error input,.field.has-error select{border-color:var(--bad)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 1rem} @media(max-width:620px){.grid2{grid-template-columns:1fr}}
+  /* badges, bars */
+  .badge{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:.1rem .5rem;border-radius:99px;background:var(--line);color:var(--muted)}
+  .badge.blue{background:var(--blue-soft);color:var(--blue)} .badge.red{background:var(--red-soft);color:var(--red)}
+  .badge.done{background:#dff3e7;color:var(--ok)} .badge.running{background:#fbefd3;color:var(--warn)}
+  .badge.pending{background:var(--line);color:var(--muted)} .badge.failed{background:#fbe0dc;color:var(--bad)}
+  .bar{height:7px;border-radius:99px;background:var(--line);overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--ok);border-radius:99px}
+  .bar i.mid{background:var(--warn)} .bar i.low{background:var(--bad)}
+  .avatar{width:50px;height:50px;border-radius:12px;object-fit:cover;flex:none;background:var(--line)}
+  div.avatar{display:grid;place-items:center;font-weight:800;color:var(--muted)}
+  table{border-collapse:collapse;width:100%;font-size:.92rem}
+  th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--line)}
+  th{font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  .muted{color:var(--muted)} .dead{text-decoration:line-through;color:var(--bad)}
+  /* unit cards */
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:.9rem}
+  .unit-card{position:relative;display:flex;align-items:center;gap:.8rem;padding:.8rem .9rem;background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--line);border-radius:14px;box-shadow:var(--shadow);transition:transform .12s}
+  .unit-card:hover{transform:translateY(-2px)}
+  .unit-card.team-blue{border-left-color:var(--blue)} .unit-card.team-red{border-left-color:var(--red)}
+  .unit-card .info{flex:1;min-width:0}
+  .unit-card .name{font-weight:700;text-decoration:none}
+  .unit-card .name::after{content:"";position:absolute;inset:0;z-index:1}
+  .unit-card .meta{display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;margin:.15rem 0 .4rem}
+  .unit-card .hp{font-size:.8rem;color:var(--muted);margin-top:.15rem}
+  .unit-card .pick,.unit-card form{position:relative;z-index:2}
+  .pick input{width:20px;height:20px;accent-color:var(--accent);cursor:pointer}
+  .fightbar{position:sticky;bottom:1rem;z-index:15;display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-top:1.2rem;padding:.8rem 1rem;background:var(--nav);color:var(--nav-ink);border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+  .fightbar .errorlist{color:#ff9d92}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem}
+  .stat{border-top:4px solid var(--line)} .stat.blue{border-top-color:var(--blue)} .stat.red{border-top-color:var(--red)}
+  .stat dl{display:grid;grid-template-columns:1fr auto;gap:.3rem 1rem;margin:.6rem 0 0}
+  .stat dt{color:var(--muted)} .stat dd{margin:0;font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+  /* fight cards */
+  .fight{margin-bottom:1rem}
+  .fight summary{cursor:pointer;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;font-weight:650}
+  .fight .winner{margin-left:auto;color:var(--ok)}
+  .fight table{margin-top:.8rem}
+  .hero{display:flex;gap:1.2rem;align-items:center}
+  .hero .avatar{width:96px;height:96px;font-size:2rem;border-radius:20px}
+  .empty{color:var(--muted);text-align:center;padding:2rem}
+</style>
+</head>
+<body>
+<nav class="nav"><div class="wrap">
+  <a class="brand" href="{% url 'unit-all' %}">Django <span>War</span> Simulator</a>
+  <a class="link {% if request.resolver_match.url_name == 'unit-all' %}on{% endif %}" href="{% url 'unit-all' %}">Army</a>
+  <a class="link {% if request.resolver_match.url_name == 'unit-create' %}on{% endif %}" href="{% url 'unit-create' %}">Add unit</a>
+  <a class="link {% if request.resolver_match.url_name == 'simulate' %}on{% endif %}" href="{% url 'simulate' %}">Simulation</a>
+</div></nav>
+<main class="wrap">
+  {% if messages %}<ul class="msgs">{% for m in messages %}<li class="{{ m.tags }}">{{ m }}</li>{% endfor %}</ul>{% endif %}
+  {% block content %}{% endblock %}
+</main>
+<script>
+  // broken / missing portraits fall back to initials (also covers images that failed before this ran)
+  function fallback(img) {
+    if (img.dataset.initials) {
+      var d = document.createElement('div'); d.className = 'avatar'; d.textContent = img.dataset.initials; img.replaceWith(d);
+    }
+  }
+  document.addEventListener('error', function (e) { if (e.target.tagName === 'IMG') fallback(e.target); }, true);
+  [].forEach.call(document.querySelectorAll('img[data-initials]'), function (img) {
+    if (img.complete && img.naturalWidth === 0) fallback(img);
+  });
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

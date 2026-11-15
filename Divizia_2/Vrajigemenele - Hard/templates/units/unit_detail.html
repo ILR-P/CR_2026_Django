@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{{ unit.name }}{% endblock %}
+{% block content %}
+<p><a class="muted" href="{% url 'unit-all' %}">← Back to the army</a></p>
+<section class="panel hero">
+  {% if unit.profile_image_link %}<img class="avatar" src="{{ unit.profile_image_link }}" alt="" data-initials="{{ unit.initials }}">{% else %}<div class="avatar">{{ unit.initials }}</div>{% endif %}
+  <div style="flex:1">
+    <h1 style="margin:0">{{ unit.name }}</h1>
+    <div class="meta" style="margin:.3rem 0 .7rem"><span class="badge">{{ unit.get_type_display }}</span> <span class="badge {{ unit.team }}">{{ unit.get_team_display }}</span></div>
+    {% include "units/_health.html" %}
+    <p class="muted" style="margin:.4rem 0 0">Health {{ unit.health }}/100 · Attack points {{ unit.attack_points }}{% if unit.profile_image_link %} · <a href="{{ unit.profile_image_link }}">portrait link</a>{% endif %}</p>
+  </div>
+  {% if unit.needs_heal %}
+  <form method="post" action="{% url 'unit-heal' unit.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{{ unit.get_absolute_url }}"><button class="btn heal">Heal</button></form>
+  {% endif %}
+</section>
+
+<h2>Fight history</h2>
+{% for fight in fights %}{% include "units/_fight_card.html" %}
+{% empty %}<div class="panel empty">{{ unit.name }} hasn't fought yet.</div>{% endfor %}
+{% endblock %}

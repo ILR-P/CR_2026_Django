@@ -1,0 +1,433 @@
+{% extends 'base.html' %}
+
+{% block title %}Fighters & Simulator - Django War Simulator{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <h2 class="fw-bold mb-1">Fighters</h2>
+        <p class="text-muted mb-0">Choose one fighter from each team to start a match.</p>
+    </div>
+    <div class="d-flex gap-2">
+        {% if units %}
+            <form method="post" action="{% url 'clear_game_data' %}"
+                  onsubmit="return confirm('Clear all fighters and fight history? This cannot be undone.');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger">Clear game data</button>
+            </form>
+        {% endif %}
+        <a href="{% url 'unit_create' %}" class="btn btn-primary fw-semibold">+ Add Fighter</a>
+    </div>
+</div>
+
+<section class="fighter-tools card mb-3" aria-label="Find and sort fighters">
+    <div class="card-body">
+        <div class="row g-2 align-items-end">
+            <div class="col-12 col-md-6 col-xl-4">
+                <label class="form-label small fw-semibold mb-1" for="fighter-search">Search</label>
+                <input id="fighter-search" class="form-control" type="search" placeholder="Fighter name" autocomplete="off">
+            </div>
+            <div class="col-6 col-md-3 col-xl-2">
+                <label class="form-label small fw-semibold mb-1" for="team-filter">Team</label>
+                <select id="team-filter" class="form-select">
+                    <option value="">All teams</option>
+                    <option value="Blue">Blue</option>
+                    <option value="Red">Red</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-3 col-xl-2">
+                <label class="form-label small fw-semibold mb-1" for="type-filter">Type</label>
+                <select id="type-filter" class="form-select">
+                    <option value="">All types</option>
+                    <option value="Infantry">Infantry</option>
+                    <option value="Cannon">Cannon</option>
+                    <option value="Cavalry">Cavalry</option>
+                    <option value="Knight">Knight</option>
+                </select>
+            </div>
+            <div class="col-8 col-md-6 col-xl-3">
+                <label class="form-label small fw-semibold mb-1" for="sort-fighters">Sort by</label>
+                <select id="sort-fighters" class="form-select">
+                    <option value="name">Name A to Z</option>
+                    <option value="attack">Attack (highest)</option>
+                    <option value="health-high">Health (highest)</option>
+                    <option value="health-low">Health (lowest)</option>
+                </select>
+            </div>
+            <div class="col-4 col-md-6 col-xl-1 d-grid">
+                <button id="clear-filters" class="btn btn-outline-secondary" type="button">Clear</button>
+            </div>
+        </div>
+        <p id="fighter-count" class="small text-muted mb-0 mt-3" aria-live="polite"></p>
+    </div>
+</section>
+
+<!-- Client-side error banner -->
+<div id="frontend-error-alert" class="alert alert-danger d-none alert-dismissible fade show" role="alert">
+    <span id="frontend-error-text"></span>
+    <button type="button" class="btn-close" onclick="hideFrontendError()" aria-label="Close"></button>
+</div>
+
+<!-- Simulation Panel Form -->
+<form id="simulate-form" method="post" action="{% url 'unit_all' %}" class="mb-4">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="simulate">
+
+    <div class="card border-0 shadow-sm p-3 bg-white">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div class="d-flex align-items-center gap-2 flex-grow-1">
+                <span class="fw-bold text-secondary">Matchup:</span>
+                <span id="selection-summary" class="text-muted fst-italic">Choose a Blue fighter and a Red fighter.</span>
+            </div>
+            <button type="submit" id="simulate-btn" class="btn btn-danger px-4 py-2 fw-bold d-flex align-items-center gap-2 shadow-sm">
+                <span>⚔️</span>
+                <span>Simulate</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Fighters Grid -->
+    <div id="unit-grid" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3 mt-1 mb-2">
+        {% for unit in units %}
+            <div class="col unit-card-column">
+                <div class="card h-100 card-clickable border shadow-sm position-relative unit-card" 
+                     id="unit-card-{{ unit.id }}"
+                     data-id="{{ unit.id }}"
+                     data-name="{{ unit.name|lower }}"
+                     data-team="{{ unit.team }}"
+                     data-type="{{ unit.unit_type }}"
+                     data-health="{{ unit.health }}"
+                     data-attack="{{ unit.attack_points }}">
+                    <a href="{% url 'unit_detail' unit.id %}"
+                       class="stretched-link"
+                       aria-label="View {{ unit.name }} details and fight history"></a>
+                    <div class="card-body d-flex align-items-center p-3">
+                        <!-- Selector Checkbox -->
+                        <div class="form-check me-2 mb-0 position-relative z-2" onclick="event.stopPropagation();">
+                            <input class="form-check-input fighter-checkbox" 
+                                   type="checkbox" 
+                                   name="fighter_ids" 
+                                   value="{{ unit.id }}" 
+                                   id="checkbox-{{ unit.id }}"
+                                   data-id="{{ unit.id }}"
+                                   data-name="{{ unit.name }}"
+                                   data-team="{{ unit.team }}"
+                                   data-health="{{ unit.health }}"
+                                   onchange="handleCheckboxToggle(this)"
+                                   onclick="event.stopPropagation();">
+                        </div>
+
+                        <!-- Profile picture on the left strictly at 50x50 resolution -->
+                        <img src="{{ unit.profile_image_link }}" 
+                             alt="{{ unit.name }}" 
+                             class="fighter-avatar me-3 flex-shrink-0" 
+                             style="width: 50px; height: 50px; object-fit: cover;"
+                              onerror="this.onerror=null;this.src='https://placehold.co/50x50?text=Unit';">
+
+                        <!-- Fighter Info -->
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <h6 class="mb-0 fw-bold text-truncate me-2" title="{{ unit.name }}">{{ unit.name }}</h6>
+                                <span class="badge {% if unit.team == 'Blue' %}team-badge-blue{% else %}team-badge-red{% endif %} px-2 py-1">
+                                    {{ unit.team }}
+                                </span>
+                            </div>
+
+                            <div class="small text-muted mb-2">
+                                <span class="fw-medium text-dark">{{ unit.unit_type }}</span>
+                                <span class="mx-1">•</span>
+                                <span>ATK: <strong>{{ unit.attack_points }}</strong></span>
+                            </div>
+
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="small">
+                                    HP: <span class="fw-bold {% if unit.health == 0 %}text-danger{% elif unit.health < 40 %}text-warning{% else %}text-success{% endif %}">{{ unit.health }}</span>/100
+                                </div>
+                                {% if unit.health < 100 %}
+                                    <div class="position-relative z-2" onclick="event.stopPropagation();">
+                                        <button type="button" 
+                                                class="btn btn-sm btn-outline-success py-0 px-2 fw-semibold"
+                                                onclick="healFighter(event, '{{ unit.id }}', '{% url 'unit_heal' unit.id %}')">
+                                            Heal
+                                        </button>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="card p-5 text-center bg-white border-0 shadow-sm">
+                    <p class="text-muted mb-3 fs-5">No fighters yet.</p>
+                    <div>
+                        <a href="{% url 'unit_create' %}" class="btn btn-primary fw-bold">+ Add Your First Fighter</a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</form>
+
+<div id="no-filter-results" class="card d-none mb-5">
+    <div class="card-body py-4 text-center text-muted">No fighters match those filters. Try a different search.</div>
+</div>
+
+<!-- Separate hidden form for Heal POST -->
+<form id="heal-form" method="post" action="" style="display: none;">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{% url 'unit_all' %}">
+</form>
+
+<!-- Team Statistics Component (Below the list on /unit/all) -->
+<div class="team-statistics-section mt-5 pt-3 border-top">
+    <div class="mb-4">
+        <h3 class="fw-bold mb-1">Team stats</h3>
+        <p class="text-muted">Totals from saved fights.</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Team Blue Card -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100 overflow-hidden" style="border-top: 4px solid var(--blue-team) !important;">
+                <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge team-badge-blue px-3 py-2 fs-6">Team Blue</span>
+                    </div>
+                    <span class="text-muted small">Total Fights: <strong>{{ team_stats.Blue.fights }}</strong></span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row text-center g-3">
+                        <div class="col-4">
+                            <div class="p-3 rounded bg-light">
+                                <div class="text-muted small mb-1">Fights</div>
+                                <div class="fs-4 fw-bold text-primary">{{ team_stats.Blue.fights }}</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-3 rounded bg-light">
+                                <div class="text-muted small mb-1">Damage Caused</div>
+                                <div class="fs-4 fw-bold text-success">{{ team_stats.Blue.damage_caused }}</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-3 rounded bg-light">
+                                <div class="text-muted small mb-1">Damage Taken</div>
+                                <div class="fs-4 fw-bold text-danger">{{ team_stats.Blue.damage_taken }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Team Red Card -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100 overflow-hidden" style="border-top: 4px solid var(--red-team) !important;">
+                <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge team-badge-red px-3 py-2 fs-6">Team Red</span>
+                    </div>
+                    <span class="text-muted small">Total Fights: <strong>{{ team_stats.Red.fights }}</strong></span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row text-center g-3">
+                        <div class="col-4">
+                            <div class="p-3 rounded bg-light">
+                                <div class="text-muted small mb-1">Fights</div>
+                                <div class="fs-4 fw-bold text-danger">{{ team_stats.Red.fights }}</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-3 rounded bg-light">
+                                <div class="text-muted small mb-1">Damage Caused</div>
+                                <div class="fs-4 fw-bold text-success">{{ team_stats.Red.damage_caused }}</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-3 rounded bg-light">
+                                <div class="text-muted small mb-1">Damage Taken</div>
+                                <div class="fs-4 fw-bold text-danger">{{ team_stats.Red.damage_taken }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const fighterGrid = document.getElementById('unit-grid');
+    const fighterColumns = Array.from(fighterGrid.querySelectorAll('.unit-card-column'));
+    const fighterCount = document.getElementById('fighter-count');
+    const noFilterResults = document.getElementById('no-filter-results');
+
+    function updateFighterCount(visibleCount = null) {
+        const visible = visibleCount ?? fighterColumns.filter(column => !column.classList.contains('d-none')).length;
+        const selected = document.querySelectorAll('.fighter-checkbox:checked').length;
+        const selectionText = selected ? ` ${selected} selected.` : '';
+        fighterCount.textContent = fighterColumns.length
+            ? `Showing ${visible} of ${fighterColumns.length} fighters.${selectionText}`
+            : 'No fighters yet.';
+    }
+
+    function filterAndSortFighters() {
+        const query = document.getElementById('fighter-search').value.trim().toLocaleLowerCase();
+        const team = document.getElementById('team-filter').value;
+        const type = document.getElementById('type-filter').value;
+        const sortBy = document.getElementById('sort-fighters').value;
+        let visibleCount = 0;
+
+        fighterColumns.forEach(column => {
+            const card = column.querySelector('.unit-card');
+            const matches = card.dataset.name.includes(query)
+                && (!team || card.dataset.team === team)
+                && (!type || card.dataset.type === type);
+            column.classList.toggle('d-none', !matches);
+            if (matches) visibleCount += 1;
+        });
+
+        const compare = (left, right) => {
+            const first = left.querySelector('.unit-card').dataset;
+            const second = right.querySelector('.unit-card').dataset;
+            if (sortBy === 'attack') return Number(second.attack) - Number(first.attack);
+            if (sortBy === 'health-high') return Number(second.health) - Number(first.health);
+            if (sortBy === 'health-low') return Number(first.health) - Number(second.health);
+            return first.name.localeCompare(second.name, undefined, { sensitivity: 'base' });
+        };
+
+        fighterColumns.sort(compare).forEach(column => fighterGrid.appendChild(column));
+        noFilterResults.classList.toggle('d-none', visibleCount > 0 || fighterColumns.length === 0);
+        updateFighterCount(visibleCount);
+    }
+
+    document.getElementById('fighter-search').addEventListener('input', filterAndSortFighters);
+    document.getElementById('team-filter').addEventListener('change', filterAndSortFighters);
+    document.getElementById('type-filter').addEventListener('change', filterAndSortFighters);
+    document.getElementById('sort-fighters').addEventListener('change', filterAndSortFighters);
+    document.getElementById('clear-filters').addEventListener('click', () => {
+        document.getElementById('fighter-search').value = '';
+        document.getElementById('team-filter').value = '';
+        document.getElementById('type-filter').value = '';
+        document.getElementById('sort-fighters').value = 'name';
+        filterAndSortFighters();
+    });
+
+    updateFighterCount();
+
+    function showFrontendError(msg) {
+        const alertBox = document.getElementById('frontend-error-alert');
+        const alertText = document.getElementById('frontend-error-text');
+        alertText.textContent = msg;
+        alertBox.classList.remove('d-none');
+        alertBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function hideFrontendError() {
+        const alertBox = document.getElementById('frontend-error-alert');
+        alertBox.classList.add('d-none');
+    }
+
+    function healFighter(event, unitId, healUrl) {
+        event.stopPropagation();
+        const form = document.getElementById('heal-form');
+        form.action = healUrl;
+        form.submit();
+    }
+
+    function handleCheckboxToggle(checkbox) {
+        hideFrontendError();
+        const checkboxes = Array.from(document.querySelectorAll('.fighter-checkbox:checked'));
+        
+        // Update visual card highlighting
+        document.querySelectorAll('.unit-card').forEach(card => {
+            const cb = card.querySelector('.fighter-checkbox');
+            const team = card.getAttribute('data-team');
+            if (cb && cb.checked) {
+                card.classList.add(team === 'Blue' ? 'card-selected-blue' : 'card-selected-red');
+            } else {
+                card.classList.remove('card-selected-blue', 'card-selected-red');
+            }
+        });
+
+        const summaryEl = document.getElementById('selection-summary');
+        if (checkboxes.length === 0) {
+            summaryEl.textContent = 'Select 1 Blue fighter and 1 Red fighter using the checkboxes below';
+            summaryEl.className = 'text-muted fst-italic';
+        } else if (checkboxes.length === 1) {
+            const name = checkboxes[0].dataset.name;
+            const team = checkboxes[0].dataset.team;
+            const badgeClass = team === 'Blue' ? 'team-badge-blue' : 'team-badge-red';
+            summaryEl.replaceChildren(document.createTextNode('Selected 1: '));
+            const badge = document.createElement('strong');
+            badge.className = `badge ${badgeClass}`;
+            badge.textContent = `${name} (${team})`;
+            summaryEl.append(badge, document.createTextNode(' — Please select an opponent from the other team.'));
+            summaryEl.className = 'text-dark';
+        } else if (checkboxes.length === 2) {
+            const f1 = checkboxes[0].dataset;
+            const f2 = checkboxes[1].dataset;
+            const b1 = f1.team === 'Blue' ? 'team-badge-blue' : 'team-badge-red';
+            const b2 = f2.team === 'Blue' ? 'team-badge-blue' : 'team-badge-red';
+            const firstBadge = document.createElement('span');
+            firstBadge.className = `badge ${b1}`;
+            firstBadge.textContent = `${f1.name} (${f1.team})`;
+            const versus = document.createElement('strong');
+            versus.className = 'mx-1';
+            versus.textContent = 'VS';
+            const secondBadge = document.createElement('span');
+            secondBadge.className = `badge ${b2}`;
+            secondBadge.textContent = `${f2.name} (${f2.team})`;
+            summaryEl.replaceChildren(firstBadge, versus, secondBadge);
+            summaryEl.className = 'text-dark';
+        } else {
+            summaryEl.textContent = `${checkboxes.length} fighters selected (Only 2 allowed)`;
+            summaryEl.className = 'text-danger fw-bold';
+        }
+        updateFighterCount();
+    }
+
+    // Form submit validation
+    document.getElementById('simulate-form').addEventListener('submit', function(e) {
+        const checked = Array.from(document.querySelectorAll('.fighter-checkbox:checked'));
+
+        if (checked.length !== 2) {
+            e.preventDefault();
+            showFrontendError("Please select exactly 2 fighters to simulate a fight.");
+            return false;
+        }
+
+        const f1 = checked[0];
+        const f2 = checked[1];
+
+        const f1Health = parseInt(f1.dataset.health, 10);
+        const f2Health = parseInt(f2.dataset.health, 10);
+        const f1Team = f1.dataset.team;
+        const f2Team = f2.dataset.team;
+
+        if (f1.dataset.id === f2.dataset.id) {
+            e.preventDefault();
+            showFrontendError("Fighters must be distinct.");
+            return false;
+        }
+
+        if (f1Health <= 0 || f2Health <= 0) {
+            e.preventDefault();
+            showFrontendError("Both fighters must have health greater than 0.");
+            return false;
+        }
+
+        if (f1Team === f2Team) {
+            e.preventDefault();
+            showFrontendError("Fighters must belong to different teams (Blue vs Red).");
+            return false;
+        }
+
+        return true;
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ unit.name }} - Details & History{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'unit_all' %}" class="btn btn-outline-secondary btn-sm mb-3">
+        &larr; Back to Fighters List
+    </a>
+</div>
+
+<!-- Fighter Details Card -->
+<div class="card shadow-sm border-0 mb-5">
+    <div class="card-body p-4">
+        <div class="row align-items-center">
+            <div class="col-auto">
+                <img src="{{ unit.profile_image_link }}" 
+                     alt="{{ unit.name }}" 
+                     class="rounded shadow-sm"
+                     style="width: 100px; height: 100px; object-fit: cover;"
+                     onerror="this.onerror=null;this.src='https://placehold.co/100x100?text=Unit';">
+            </div>
+            <div class="col">
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                    <h2 class="fw-bold mb-0">{{ unit.name }}</h2>
+                    <span class="badge {% if unit.team == 'Blue' %}team-badge-blue{% else %}team-badge-red{% endif %} fs-6 px-3 py-1">
+                        Team {{ unit.team }}
+                    </span>
+                    <span class="badge bg-secondary fs-6 px-3 py-1">
+                        {{ unit.unit_type }}
+                    </span>
+                </div>
+
+                <div class="row g-3 mt-1">
+                    <div class="col-auto">
+                        <div class="text-muted small">Current Health</div>
+                        <div class="fs-5 fw-bold {% if unit.health == 0 %}text-danger{% elif unit.health < 40 %}text-warning{% else %}text-success{% endif %}">
+                            {{ unit.health }} / 100
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <div class="text-muted small">Attack Points</div>
+                        <div class="fs-5 fw-bold text-dark">
+                            {{ unit.attack_points }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <div class="text-muted small">Image Link</div>
+                        <div class="text-truncate" style="max-width: 250px;">
+                            <a href="{{ unit.profile_image_link }}" target="_blank" rel="noopener noreferrer" class="small text-decoration-none">
+                                View Image
+                            </a>
+                        </div>
+                    </div>
+                    {% if unit.health < 100 %}
+                        <div class="col-auto d-flex align-items-end">
+                            <form method="post" action="{% url 'unit_heal' unit.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{% url 'unit_detail' unit.id %}">
+                                <button type="submit" class="btn btn-success fw-bold px-3">
+                                    🩹 Heal to 100 HP
+                                </button>
+                            </form>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Fight History Section -->
+<div class="fight-history-section">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Fight History</h3>
+            <p class="text-muted mb-0">Complete battle records and step-by-step logs for {{ unit.name }}.</p>
+        </div>
+        <span class="badge bg-dark px-3 py-2 fs-6">{{ fights.count }} Fight{{ fights.count|pluralize }}</span>
+    </div>
+
+    {% for fight in fights %}
+        <div class="card shadow-sm border-0 mb-4 overflow-hidden">
+            <div class="card-header bg-white py-3 border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fw-bold fs-5">Fight #{{ fight.id }}</span>
+                    <span class="text-muted small">({{ fight.created_at|date:"M d, Y H:i:s" }})</span>
+                </div>
+                <div>
+                    <span class="me-2 text-secondary">Winner:</span>
+                    {% if fight.winner %}
+                        <span class="badge {% if fight.winner.team == 'Blue' %}team-badge-blue{% else %}team-badge-red{% endif %} px-3 py-2 fs-6">
+                            🏆 {{ fight.winner.name }} ({{ fight.winner.team }})
+                        </span>
+                    {% else %}
+                        <span class="badge bg-secondary px-3 py-2 fs-6">Draw</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                <!-- Participants Banner -->
+                <div class="bg-light p-3 border-bottom d-flex justify-content-around text-center">
+                    <div>
+                        <div class="small text-muted">Fighter 1</div>
+                        <a href="{% url 'unit_detail' fight.fighter_1.id %}" class="fw-bold text-decoration-none {% if fight.fighter_1.team == 'Blue' %}text-primary{% else %}text-danger{% endif %}">
+                            {{ fight.fighter_1.name }} ({{ fight.fighter_1.team }})
+                        </a>
+                    </div>
+                    <div class="align-self-center fw-bold text-muted">VS</div>
+                    <div>
+                        <div class="small text-muted">Fighter 2</div>
+                        <a href="{% url 'unit_detail' fight.fighter_2.id %}" class="fw-bold text-decoration-none {% if fight.fighter_2.team == 'Blue' %}text-primary{% else %}text-danger{% endif %}">
+                            {{ fight.fighter_2.name }} ({{ fight.fighter_2.team }})
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Steps Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small">
+                            <tr>
+                                <th style="width: 80px;" class="text-center">Step</th>
+                                <th>Attacker</th>
+                                <th>Defender</th>
+                                <th class="text-center">Damage</th>
+                                <th class="text-center">Attacker HP After</th>
+                                <th class="text-center">Defender HP After</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for step in fight.steps.all %}
+                                <tr>
+                                    <td class="text-center fw-bold text-muted">{{ step.step_number }}</td>
+                                    <td>
+                                        <span class="badge {% if step.attacker.team == 'Blue' %}team-badge-blue{% else %}team-badge-red{% endif %}">
+                                            {{ step.attacker.name }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if step.defender.team == 'Blue' %}team-badge-blue{% else %}team-badge-red{% endif %}">
+                                            {{ step.defender.name }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-danger-subtle text-danger fw-bold fs-6">
+                                            -{{ step.damage }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center fw-semibold text-secondary">
+                                        {{ step.attacker_health_after }}
+                                    </td>
+                                    <td class="text-center fw-semibold {% if step.defender_health_after == 0 %}text-danger fw-bold{% else %}text-secondary{% endif %}">
+                                        {{ step.defender_health_after }}
+                                        {% if step.defender_health_after == 0 %}
+                                            <span class="badge bg-danger ms-1">KO</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-3">No steps recorded for this fight.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="card p-5 text-center bg-white border-0 shadow-sm">
+            <p class="text-muted mb-0">This unit has not participated in any fights yet.</p>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

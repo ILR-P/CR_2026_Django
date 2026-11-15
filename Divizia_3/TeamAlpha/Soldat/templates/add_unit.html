@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head><title>Add Fighter</title></head>
+<body>
+    <h1>Recruit New Fighter</h1>
+    <a href="{% url 'all_units' %}">View All Fighters</a>
+
+    {% if form.errors %}
+        <div style="color: red; border: 1px solid red; padding: 10px; margin: 10px 0;">
+            <strong>Please fix the following errors:</strong>
+            {{ form.errors }}
+        </div>
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Add</button>
+    </form>
+</body>
+</html>
